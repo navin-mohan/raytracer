@@ -7,8 +7,8 @@ pub struct Ray {
 }
 
 impl Ray {
-    pub fn new(origin: Vec3, direction: &Vec3) -> Ray {
-        Ray { origin , direction: direction.normal() }
+    pub fn new(origin: &Vec3, direction: &Vec3) -> Ray {
+        Ray { origin: *origin , direction: direction.normal() }
     }
 
     pub fn at(&self, t: f64) -> Vec3 {
@@ -31,7 +31,7 @@ mod tests {
     #[test]
     fn test_ray_construction() {
         let r = Ray::new(
-            Vec3::new(3.14, -2.1, 1.4),
+            &Vec3::new(3.14, -2.1, 1.4),
             &Vec3::new(1.0, -2.1, 3.4)
         );
         assert_eq!(r.direction().length(), 1.0)
@@ -40,7 +40,7 @@ mod tests {
     #[test]
     fn test_parameter_evaluation() {
         let r = Ray::new(
-            Vec3::new(3.14, -2.1, 1.4),
+            &Vec3::new(3.14, -2.1, 1.4),
             &Vec3::new(1.0, -2.1, 3.4)
         );
 

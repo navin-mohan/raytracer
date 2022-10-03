@@ -1,27 +1,30 @@
 mod vec3;
 mod image;
 mod ray;
+mod hittable;
 
 use image::{Image, Pixel};
 use vec3::Vec3;
 use ray::Ray;
+use hittable::{HitRecord, Hittable, sphere::Sphere};
+use std::{fs::File, io::Write};
 
 
-fn trace_ray(r: &Ray, origin: &Vec3) -> Pixel {
-    let c = Circle::new(Vec3::new(0.0, 0.0, -1.0), 0.5);
-    let points = c.find_intersection_points(r);
-    if !points.is_empty() {
-        let mut closest_point: Vec3 = points[0];
-        let mut dist_closest_point = (points[0] - *origin).length_squared();
-        for point in points {
-            let distance_of_point = (point - *origin).length_squared();
-            if dist_closest_point > distance_of_point {
-                closest_point = point;
-                dist_closest_point = distance_of_point;
-            }
+fn trace_ray(r: &Ray, world: &Vec<Box<dyn Hittable>>) -> Pixel {
+    let mut t_closest_so_far = f64::INFINITY;
+    let mut rec: Option<HitRecord> = None;
+    for obj in world {
+        let result = obj.hit(&r, 0.0, t_closest_so_far);
+
+        if let Some(temp_rec) = result {
+            t_closest_so_far = temp_rec.t_value();
+            rec = Some(temp_rec);
         }
+    }
+    if let Some(final_rec) = rec {
+        
 
-        let sphere_normal = ((closest_point - *c.center()).normal() + 1.0) * 0.5;
+        let sphere_normal = (*final_rec.normal() + 1.0) * 0.5;
 
         return Pixel::new(
             (sphere_normal.x * 255.0) as u8,
@@ -29,20 +32,6 @@ fn trace_ray(r: &Ray, origin: &Vec3) -> Pixel {
             (sphere_normal.z * 255.0) as u8
         );
     }
-
-    // let c = Circle::new(Vec3::new(1.0, 0.0, -1.0), 0.2);
-    // let points = c.find_intersection_points(r);
-    // if !points.is_empty() {
-    //     return Pixel::new(0, 255, 0);
-
-    // }
-
-    // let c = Circle::new(Vec3::new(-1.0, 0.0, -1.0), 0.2);
-    // let points = c.find_intersection_points(r);
-    // if !points.is_empty() {
-    //     return Pixel::new(0, 0, 255);
-
-    // }
 
     let w = 0.5*(r.direction().y + 1.0);
     let white: Vec3 = Vec3::new(1.0, 1.0, 1.0);
@@ -55,7 +44,7 @@ fn trace_ray(r: &Ray, origin: &Vec3) -> Pixel {
     )
 }
 
-fn main() {
+fn main() -> std::io::Result<()> {
     const ASPECT_RATIO: f64 = 16.0/9.0;
 
     const VP_HEIGHT: f64 = 2.0;
@@ -73,52 +62,32 @@ fn main() {
 
     let mut image = Image::new(IMG_HEIGHT, IMG_WIDTH);
 
+    let sphere1 = Sphere::new(
+        &Vec3::new(0.0, 0.0, -1.0),
+        0.5
+    );
+
+    let sphere2 = Sphere::new(
+        &Vec3::new(0.0, -100.5, -1.0),
+        100.0
+    );
+
+    let mut world: Vec<Box<dyn Hittable>> = Vec::new();
+    world.push(Box::new(sphere1));
+    world.push(Box::new(sphere2));
+
     for y in 0..image.height() {
         for x in 0..image.width() {
             let u: f64 = x as f64 / (image.width() as f64 - 1.0);
             let v: f64 = y as f64 / (image.height() as f64 - 1.0);
             let direction = lower_left_corner + horizontal*u + vertical*v - origin;
-            let ray = Ray::new(origin, &direction);
-            let pixel = trace_ray(&ray, &origin);
+            let ray = Ray::new(&origin, &direction);
+            let pixel = trace_ray(&ray, &world);
             image.insert_pixel_at(x, image.height() - y - 1, &pixel);
         }
     }
 
-    print!("{}", image.to_ppm())
-}
-
-struct Circle {
-    center: Vec3,
-    radius: f64
-}
-
-impl Circle {
-    pub fn new(center: Vec3, radius: f64) -> Circle {
-        Circle { center, radius }
-    }
-
-    pub fn find_intersection_points(&self, r: &Ray) -> Vec<Vec3> {
-        let origin_to_center = self.center - *r.origin();
-        let b = 2.0 * origin_to_center.dot(r.direction()); 
-        let a = r.direction().length_squared();
-        let c = origin_to_center.length_squared() - self.radius*self.radius;
-        let determinant = b*b - 4.0*a*c;
-
-        let mut v = Vec::new();
-
-        if determinant == 0.0 {
-            let t = -b / (2.0*a);
-            v.push(r.at(t));
-        } else if determinant > 0.0 {
-            let t1 = (-b + determinant) / (2.0*a);
-            let t2 = (-b - determinant) / (2.0*a);
-            v.push(r.at(t1));
-            v.push(r.at(t2));
-        }
-        v
-    }
-
-    pub fn center(&self) -> &Vec3 {
-        &self.center
-    }
+    let mut f = File::create("test.ppm")?;
+    f.write_all(image.to_ppm().as_bytes())?;
+    Ok(())
 }
