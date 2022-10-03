@@ -2,12 +2,14 @@ mod vec3;
 mod image;
 mod ray;
 mod hittable;
+mod camera;
 
 use image::{Image, Pixel};
 use vec3::Vec3;
 use ray::Ray;
 use hittable::{HitRecord, Hittable, sphere::Sphere};
-use std::{fs::File, io::Write};
+use std::{fs::File, io::Write, iter::repeat_with};
+use crate::camera::Camera;
 
 
 fn trace_ray(r: &Ray, world: &Vec<Box<dyn Hittable>>) -> Pixel {
@@ -55,10 +57,10 @@ fn main() -> std::io::Result<()> {
 
     const FOCAL_LENGTH: f64 = 1.0;
 
+    const SAMPLES_PER_PIXEL: usize = 100;
+
     let origin = Vec3::new(0.0, 0.0, 0.0);
-    let lower_left_corner = Vec3::new(- VP_WIDTH / 2.0, - VP_HEIGHT / 2.0, - FOCAL_LENGTH);
-    let horizontal = Vec3::new(VP_WIDTH, 0.0, 0.0);
-    let vertical = Vec3::new(0.0, VP_HEIGHT, 0.0);
+    let camera = Camera::new(&origin, VP_HEIGHT, VP_WIDTH, FOCAL_LENGTH);
 
     let mut image = Image::new(IMG_HEIGHT, IMG_WIDTH);
 
@@ -78,11 +80,14 @@ fn main() -> std::io::Result<()> {
 
     for y in 0..image.height() {
         for x in 0..image.width() {
-            let u: f64 = x as f64 / (image.width() as f64 - 1.0);
-            let v: f64 = y as f64 / (image.height() as f64 - 1.0);
-            let direction = lower_left_corner + horizontal*u + vertical*v - origin;
-            let ray = Ray::new(&origin, &direction);
-            let pixel = trace_ray(&ray, &world);
+            let avg_sample: Vec3 = repeat_with(|| fastrand::f64())
+                                    .take(SAMPLES_PER_PIXEL)
+                                    .map(|random_val| ((x as f64 + random_val) / (image.width() as f64 - 1.0), (y as f64 + random_val) / (image.height() as f64 - 1.0)))
+                                    .map(|(u,v)| camera.get_ray(u, v))
+                                    .map(|ray| trace_ray(&ray, &world))
+                                    .map(|pixel| Vec3::new(pixel.r as f64, pixel.g as f64, pixel.b as f64))
+                                    .fold(Vec3::new(0.0, 0.0, 0.0), |acc, v| acc + v) / SAMPLES_PER_PIXEL as f64;
+            let pixel = Pixel::from_vec3(&avg_sample);
             image.insert_pixel_at(x, image.height() - y - 1, &pixel);
         }
     }

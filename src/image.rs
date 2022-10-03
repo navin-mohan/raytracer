@@ -1,3 +1,5 @@
+use crate::vec3::Vec3;
+
 #[derive(Clone)]
 pub struct Pixel {
     pub r: u8,
@@ -8,6 +10,23 @@ pub struct Pixel {
 impl Pixel {
     pub fn new(r: u8, g: u8, b: u8) -> Pixel {
         Pixel {r, g, b}
+    }
+
+    pub fn from_vec3(v: &Vec3) -> Pixel {
+        Pixel::new(
+            Pixel::clamp(v.x),
+            Pixel::clamp(v.y),
+            Pixel::clamp(v.z)
+        )
+    }
+
+    fn clamp(v: f64) -> u8 {
+        if v < 0.0 {
+            return 0;
+        } else if v > 255.0 {
+            return 255;
+        }
+        return v as u8;
     }
 }
 
