@@ -10,7 +10,7 @@ use vec3::Vec3;
 use ray::Ray;
 use hittable::{HitRecord, Hittable, sphere::Sphere};
 use std::{fs::File, io::Write, iter::repeat_with, rc::Rc};
-use crate::{camera::Camera, material::Lambertian, material::Metal};
+use crate::{camera::Camera, material::{Lambertian, Dielectric}, material::Metal};
 
 
 fn trace_ray(r: &Ray, world: &Vec<Box<dyn Hittable>>, max_depth: usize) -> Pixel {
@@ -78,9 +78,9 @@ fn main() -> std::io::Result<()> {
     let mut image = Image::new(IMG_HEIGHT, IMG_WIDTH);
 
     let material_ground = Rc::new(Lambertian::new(&Vec3::new(0.8, 0.8, 0.0)));
-    let material_left = Rc::new(Metal::new(&Vec3::new(0.8, 0.8, 0.8), 0.0));
+    let material_left = Rc::new(Dielectric::new(1.5));
     let material_right = Rc::new(Metal::new(&Vec3::new(0.8, 0.6, 0.2), 0.3));
-    let material_center = Rc::new(Lambertian::new(&Vec3::new(0.7, 0.3, 0.3)));
+    let material_center = Rc::new(Dielectric::new(1.5));
 
     let sphere_center = Sphere::new(
         &Vec3::new( 0.0, 0.0, -1.0),

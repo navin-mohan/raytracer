@@ -31,6 +31,10 @@ impl HitRecord {
         &self.point
     }
 
+    pub fn front_face(&self) -> bool {
+        self.front_face
+    }
+
     pub fn material(&self) -> Rc<dyn Material> {
         self.material.clone()
     }
