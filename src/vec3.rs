@@ -47,6 +47,11 @@ impl Vec3 {
             fastrand::f64()*2.0 - 1.0
         ).normal()
     }
+
+    pub fn is_near_zero(&self) -> bool {
+        const NEAR_ZERO_THRESHOLD: f64 = 1e-8;
+        self.x < NEAR_ZERO_THRESHOLD && self.y < NEAR_ZERO_THRESHOLD && self.z < NEAR_ZERO_THRESHOLD
+    }
 }
 
 impl ops::Add<Vec3> for Vec3 {

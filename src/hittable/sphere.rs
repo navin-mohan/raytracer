@@ -1,14 +1,17 @@
 
-use crate::{vec3::Vec3, ray::Ray};
+use crate::{vec3::Vec3, ray::Ray, material::Material};
 use super::{Hittable, HitRecord};
+use std::rc::Rc;
+
 pub struct Sphere {
     center: Vec3,
-    radius: f64
+    radius: f64,
+    material: Rc<dyn Material>
 }
 
 impl Sphere {
-    pub fn new(center: &Vec3, radius: f64) -> Sphere {
-        Sphere { center: *center, radius }
+    pub fn new(center: &Vec3, radius: f64, material: Rc<dyn Material>) -> Sphere {
+        Sphere { center: *center, radius, material }
     }
 
     pub fn center(&self) -> &Vec3 {
@@ -40,7 +43,7 @@ impl Hittable for Sphere {
                 let outward_normal = self.get_normal(&point);
                 let front_face = r.direction().dot(&outward_normal) < 0.0;
                 let normal = if front_face { outward_normal } else { outward_normal*-1.0 };
-                return Some(HitRecord::new(&point, &normal, t, front_face))
+                return Some(HitRecord::new(&point, &normal, t, front_face, self.material.clone()))
             }
         }
 
@@ -51,8 +54,10 @@ impl Hittable for Sphere {
 
 #[cfg(test)]
 mod tests {
+    use std::rc::Rc;
+
     use super::Sphere;
-    use crate::{ray::Ray, vec3::Vec3, hittable::Hittable};
+    use crate::{ray::Ray, vec3::Vec3, hittable::Hittable, material::Lambertian};
 
     #[test]
     fn test_hit() {
@@ -60,9 +65,10 @@ mod tests {
         let t_min: f64 = 0.0;
         let t_max: f64 = f64::INFINITY;
 
+        let material = Rc::new(Lambertian::new(&Vec3::new(0.8, 0.8, 0.0)));
         let center = Vec3::new(0.0, 0.0, -5.0);
         let radius: f64 = 2.0;
-        let sphere = Sphere::new(&center, radius);
+        let sphere = Sphere::new(&center, radius, material);
 
         let direction = Vec3::new(0.0, radius + 1.0, -5.0);
         let ray_miss = Ray::new(&origin, &direction);

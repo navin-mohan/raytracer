@@ -9,8 +9,8 @@ use image::{Image, Pixel};
 use vec3::Vec3;
 use ray::Ray;
 use hittable::{HitRecord, Hittable, sphere::Sphere};
-use std::{fs::File, io::Write, iter::repeat_with};
-use crate::camera::Camera;
+use std::{fs::File, io::Write, iter::repeat_with, rc::Rc};
+use crate::{camera::Camera, material::Lambertian, material::Metal};
 
 
 fn trace_ray(r: &Ray, world: &Vec<Box<dyn Hittable>>, max_depth: usize) -> Pixel {
@@ -33,15 +33,17 @@ fn trace_ray(r: &Ray, world: &Vec<Box<dyn Hittable>>, max_depth: usize) -> Pixel
 
     if let Some(final_rec) = rec {
 
-        let new_direction = *final_rec.point() + *final_rec.normal() + Vec3::get_random_point_on_unit_circle();
-        let new_ray = Ray::new(final_rec.point(), &(new_direction - *final_rec.point()));
-        let pixel = trace_ray(&new_ray, world, max_depth - 1);
+        if let Some((attenuation, new_ray)) = final_rec.material().scatter(r, final_rec) {
+            let pixel = trace_ray(&new_ray, world, max_depth - 1);
+    
+            return Pixel::new(
+                (attenuation.x * pixel.r as f64) as u8,
+                (attenuation.y * pixel.g as f64) as u8,
+                (attenuation.z * pixel.b as f64) as u8
+            );
+        }
 
-        return Pixel::new(
-            (0.5 * pixel.r as f64) as u8,
-            (0.5 * pixel.g as f64) as u8,
-            (0.5 * pixel.b as f64) as u8
-        );
+        return Pixel::black();
     }
 
     let w = 0.5*(r.direction().y + 1.0);
@@ -75,19 +77,40 @@ fn main() -> std::io::Result<()> {
 
     let mut image = Image::new(IMG_HEIGHT, IMG_WIDTH);
 
-    let sphere1 = Sphere::new(
-        &Vec3::new(0.0, 0.0, -1.0),
-        0.5
+    let material_ground = Rc::new(Lambertian::new(&Vec3::new(0.8, 0.8, 0.0)));
+    let material_left = Rc::new(Metal::new(&Vec3::new(0.8, 0.8, 0.8)));
+    let material_right = Rc::new(Metal::new(&Vec3::new(0.8, 0.6, 0.2)));
+    let material_center = Rc::new(Lambertian::new(&Vec3::new(0.7, 0.3, 0.3)));
+
+    let sphere_center = Sphere::new(
+        &Vec3::new( 0.0, 0.0, -1.0),
+        0.5,
+        material_center
     );
 
-    let sphere2 = Sphere::new(
+    let sphere_left = Sphere::new(
+        &Vec3::new(-1.0, 0.0, -1.0),
+        0.5,
+        material_left
+    );
+
+    let sphere_right = Sphere::new(
+        &Vec3::new(1.0, 0.0, -1.0),
+        0.5,
+        material_right
+    );
+
+    let sphere_ground = Sphere::new(
         &Vec3::new(0.0, -100.5, -1.0),
-        100.0
+        100.0,
+        material_ground
     );
 
     let mut world: Vec<Box<dyn Hittable>> = Vec::new();
-    world.push(Box::new(sphere1));
-    world.push(Box::new(sphere2));
+    world.push(Box::new(sphere_ground));
+    world.push(Box::new(sphere_left));
+    world.push(Box::new(sphere_right));
+    world.push(Box::new(sphere_center));
 
     for y in 0..image.height() {
         for x in 0..image.width() {
