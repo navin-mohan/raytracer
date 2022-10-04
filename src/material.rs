@@ -76,11 +76,21 @@ impl Dielectric {
 
 impl Material for Dielectric {
     fn scatter(&self, r: &Ray, hit_record: HitRecord) -> Option<(Vec3,Ray)> {
-        let etai_over_etat = if hit_record.front_face() { 1.0 / self.refractive_index } else { self.refractive_index };
-        let refracted_direction = refract(&r.direction().normal(), hit_record.normal(), etai_over_etat);
+
+        let cos_theta = (*r.direction()*-1.0).dot(&hit_record.normal());
+        let sin_theta = (1.0 - cos_theta*cos_theta).sqrt();
+
+        let refraction_ratio = if hit_record.front_face() { 1.0 / self.refractive_index } else { self.refractive_index };
+
+        let new_direction = if refraction_ratio * sin_theta > 1.0 || reflectance(cos_theta, refraction_ratio) > fastrand::f64() {
+            // no solution for snell's law. Hence, no refraction
+            reflect(r.direction(), hit_record.normal())
+        } else {
+            refract(&r.direction().normal(), hit_record.normal(), refraction_ratio)
+        };
         Some((
             Vec3::new(1.0, 1.0, 1.0),
-            Ray::new(hit_record.point(), &refracted_direction)
+            Ray::new(hit_record.point(), &new_direction)
         ))
     }
 }
@@ -90,4 +100,11 @@ fn refract(v_in: &Vec3, normal: &Vec3, etai_over_etat: f64) -> Vec3 {
     let r_out_perpendicular = (*v_in + *normal*cos_theta)*etai_over_etat;
     let r_out_parallel = *normal * -((1.0 - r_out_perpendicular.length_squared()).abs().sqrt());
     r_out_parallel + r_out_perpendicular
+}
+
+fn reflectance(cosine: f64, ref_index: f64) -> f64 {
+    // Use Schlick's approximation for reflectance.
+    let r0 = (1.0 - ref_index) / (1.0 + ref_index);
+    let r0 = r0*r0;
+    r0 + (1.0 - r0)*((1.0 - cosine).powi(5))
 }
