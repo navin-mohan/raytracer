@@ -24,12 +24,28 @@ impl Vec3 {
         self.x*v.x + self.y*v.y + self.z*v.z
     }
 
+    pub fn sqrt(&self) -> Vec3 {
+        Vec3::new(
+            self.x.sqrt(),
+            self.y.sqrt(),
+            self.z.sqrt()
+        )
+    }
+
     pub fn normal(&self) -> Vec3 {
         Vec3::new(
             self.x,
             self.y,
             self.z
         ) / self.length()
+    }
+
+    pub fn get_random_point_on_unit_circle() -> Vec3 {
+        Vec3::new(
+            fastrand::f64()*2.0 - 1.0,
+            fastrand::f64()*2.0 - 1.0,
+            fastrand::f64()*2.0 - 1.0
+        ).normal()
     }
 }
 

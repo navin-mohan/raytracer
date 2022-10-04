@@ -21,12 +21,11 @@ impl Pixel {
     }
 
     fn clamp(v: f64) -> u8 {
-        if v < 0.0 {
-            return 0;
-        } else if v > 255.0 {
-            return 255;
-        }
-        return v as u8;
+        (if v < 0.0 { 0.0 } else if v > 255.0 { 255.0 } else { v }) as u8
+    }
+
+    pub fn black() -> Pixel {
+        Pixel::new(0,0,0)
     }
 }
 
