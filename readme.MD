@@ -2,6 +2,10 @@
 
 A basic raytracer implementation in Rust based on the [_Ray Tracing in One Weekend_](https://raytracing.github.io/books/RayTracingInOneWeekend.html) book.
 
+## Result
+
+![output](img/test.png)
+
 # How to Run
 
 ## Standalone Binary

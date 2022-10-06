@@ -13,7 +13,7 @@ fn main() -> std::io::Result<()> {
     
     const ASPECT_RATIO: f64 = 16.0 / 9.0;
 
-    const IMG_HEIGHT: usize = 400;
+    const IMG_HEIGHT: usize = 1200;
     const IMG_WIDTH: usize = (IMG_HEIGHT as f64 * ASPECT_RATIO) as usize;
 
     const SAMPLES_PER_PIXEL: usize = 100;
