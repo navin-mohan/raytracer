@@ -1,14 +1,17 @@
 use crate::vec3::Vec3;
 
-#[derive(Clone,Copy)]
+#[derive(Clone, Copy)]
 pub struct Ray {
     origin: Vec3,
-    direction: Vec3
+    direction: Vec3,
 }
 
 impl Ray {
     pub fn new(origin: &Vec3, direction: &Vec3) -> Ray {
-        Ray { origin: *origin , direction: direction.normal() }
+        Ray {
+            origin: *origin,
+            direction: direction.normal(),
+        }
     }
 
     pub fn at(&self, t: f64) -> Vec3 {
@@ -30,19 +33,13 @@ mod tests {
     use crate::vec3::Vec3;
     #[test]
     fn test_ray_construction() {
-        let r = Ray::new(
-            &Vec3::new(3.14, -2.1, 1.4),
-            &Vec3::new(1.0, -2.1, 3.4)
-        );
+        let r = Ray::new(&Vec3::new(3.14, -2.1, 1.4), &Vec3::new(1.0, -2.1, 3.4));
         assert_eq!(r.direction().length(), 1.0)
     }
 
     #[test]
     fn test_parameter_evaluation() {
-        let r = Ray::new(
-            &Vec3::new(3.14, -2.1, 1.4),
-            &Vec3::new(1.0, -2.1, 3.4)
-        );
+        let r = Ray::new(&Vec3::new(3.14, -2.1, 1.4), &Vec3::new(1.0, -2.1, 3.4));
 
         let p = r.at(0.0);
 

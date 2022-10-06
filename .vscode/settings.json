@@ -6,6 +6,7 @@
         "fastrand",
         "Lambertian",
         "powi",
-        "raytracer"
+        "raytracer",
+        "vfov"
     ]
 }
