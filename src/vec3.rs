@@ -41,11 +41,31 @@ impl Vec3 {
     }
 
     pub fn get_random_point_on_unit_circle() -> Vec3 {
-        Vec3::new(
-            fastrand::f64()*2.0 - 1.0,
-            fastrand::f64()*2.0 - 1.0,
-            fastrand::f64()*2.0 - 1.0
-        ).normal()
+        loop {
+            let v = Vec3::new(
+                fastrand::f64()*2.0 - 1.0,
+                fastrand::f64()*2.0 - 1.0,
+                fastrand::f64()*2.0 - 1.0
+            );
+
+            if v.length_squared() <= 1.0 {
+                return v
+            }
+        }
+    }
+
+    pub fn get_random_point_in_unit_disk() -> Vec3 {
+        loop {
+            let v = Vec3::new(
+                fastrand::f64()*2.0 - 1.0,
+                fastrand::f64()*2.0 - 1.0,
+                0.0
+            );
+
+            if v.length_squared() <= 1.0 {
+                return v
+            }
+        }
     }
 
     pub fn is_near_zero(&self) -> bool {
