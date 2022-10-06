@@ -6,6 +6,7 @@ mod camera;
 mod material;
 
 use image::{Image, Pixel};
+use material::Material;
 use vec3::Vec3;
 use ray::Ray;
 use hittable::{HitRecord, Hittable, sphere::Sphere};
@@ -74,36 +75,38 @@ fn main() -> std::io::Result<()> {
     let material_left = Rc::new(Dielectric::new(1.5));
     let material_right = Rc::new(Metal::new(&Vec3::new(0.8, 0.6, 0.2), 0.0));
 
-    let world: Vec<Box<dyn Hittable>> = vec![
-        Box::new(Sphere::new(
-            &Vec3::new(0.0, -100.5, -1.0),
-            100.0,
-            material_ground
-        )),
-        Box::new(Sphere::new(
-            &Vec3::new( 0.0, 0.0, -1.0),
-            0.5,
-            material_center
-        )),
-        Box::new(Sphere::new(
-            &Vec3::new(-1.0, 0.0, -1.0),
-            0.5,
-            material_left
-        )),
-        Box::new(Sphere::new(
-            &Vec3::new(1.0, 0.0, -1.0),
-            0.5,
-            material_right
-        ))
-    ];
+    let world: Vec<Box<dyn Hittable>> = create_random_scene();
+    // let world: Vec<Box<dyn Hittable>> = vec![
+    //     Box::new(Sphere::new(
+    //         &Vec3::new(0.0, -100.5, -1.0),
+    //         100.0,
+    //         material_ground
+    //     )),
+    //     Box::new(Sphere::new(
+    //         &Vec3::new( 0.0, 0.0, -1.0),
+    //         0.5,
+    //         material_center
+    //     )),
+    //     Box::new(Sphere::new(
+    //         &Vec3::new(-1.0, 0.0, -1.0),
+    //         0.5,
+    //         material_left
+    //     )),
+    //     Box::new(Sphere::new(
+    //         &Vec3::new(1.0, 0.0, -1.0),
+    //         0.5,
+    //         material_right
+    //     ))
+    // ];
 
-    let look_from = Vec3::new(3.0, 2.0, 2.0);
-    let look_at = Vec3::new(0.0, 0.0, -1.0);
+    let look_from = Vec3::new(13.0, 2.0, 3.0);
+    let look_at = Vec3::new(0.0, 0.0, 0.0);
     let view_up = Vec3::new(0.0, 1.0, 0.0);
     let vfov = 20.0;
-    let aperture = 2.0;
+    let aperture = 0.1;
+    let focus_dist = 10.0;
 
-    let camera = Camera::new(&look_from, &look_at, &view_up, vfov, ASPECT_RATIO, aperture, (look_from - look_at).length());
+    let camera = Camera::new(&look_from, &look_at, &view_up, vfov, ASPECT_RATIO, aperture, focus_dist);
 
     for y in 0..image.height() {
         for x in 0..image.width() {
@@ -123,4 +126,70 @@ fn main() -> std::io::Result<()> {
     let mut f = File::create("test.ppm")?;
     f.write_all(image.to_ppm().as_bytes())?;
     Ok(())
+}
+
+fn get_random_material() -> Rc<dyn Material> {
+    let materials: Vec<Rc<dyn Material>> = vec![
+        Rc::new(Lambertian::new(&Vec3::new(
+            fastrand::f64(),
+            fastrand::f64(),
+            fastrand::f64()
+        ))),
+        Rc::new(Metal::new(&Vec3::new(
+            0.5 + fastrand::f64() / 2.0,
+            0.5 + fastrand::f64() / 2.0,
+            0.5 + fastrand::f64() / 2.0
+        ), 
+        fastrand::f64() / 2.0)),
+        Rc::new(Dielectric::new(1.5))
+    ];
+
+    materials[fastrand::usize(0..materials.len())].clone()
+}
+
+fn create_random_scene() -> Vec<Box<dyn Hittable>> {
+    let large_spheres = vec![
+        // ground
+        Box::new(Sphere::new(
+            &Vec3::new(0.0, -1000.0, 0.0),
+            1000.0,
+            Rc::new(Lambertian::new(&Vec3::new(0.5, 0.5, 0.5)))
+        )),
+        Box::new(Sphere::new(
+            &Vec3::new(0.0, 1.0, 0.0),
+            1.0,
+            Rc::new(Dielectric::new(1.5))
+        )),
+        Box::new(Sphere::new(
+            &Vec3::new(-4.0, 1.0, 0.0),
+            1.0,
+            Rc::new(Lambertian::new(&Vec3::new(0.4, 0.2, 0.1)))
+        )),
+        Box::new(Sphere::new(
+            &Vec3::new(4.0, 1.0, 0.0),
+            1.0,
+            Rc::new(Metal::new(&Vec3::new(0.7, 0.6, 0.5), 0.0))
+        ))
+    ];
+
+    (-11..11)
+            .into_iter()
+            .flat_map(|a| (-11..11)
+                                .into_iter()
+                                .map(|b| Vec3::new(a as f64 + 0.9*fastrand::f64(), 0.2, b as f64 + 0.9*fastrand::f64()) )
+                                .map(|center| Box::new(Sphere::new(&center, 0.2, get_random_material())))
+                                .collect::<Vec<Box<Sphere>>>())
+            .chain(large_spheres.into_iter())
+            .collect()
+    
+}
+
+impl FromIterator<Box<Sphere>> for Vec<Box<dyn Hittable>> {
+    fn from_iter<T: IntoIterator<Item = Box<Sphere>>>(iter: T) -> Self {
+        let mut v : Vec<Box<dyn Hittable>> = Vec::new();
+        for sphere in iter {
+            v.push(sphere);
+        }
+        v
+    }
 }

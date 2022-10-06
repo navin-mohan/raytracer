@@ -16,19 +16,19 @@ impl Camera {
     pub fn new(look_from: &Vec3, look_at: &Vec3, view_up: &Vec3, vertical_field_of_view_deg: f64, aspect_ratio: f64, aperture: f64, focus_dist: f64) -> Camera {
         let theta = Camera::deg_to_rad(vertical_field_of_view_deg);
         let h = (theta / 2.0).tan();
-        let viewport_height = 2.0 * h * focus_dist;
+        let viewport_height = 2.0 * h;
         let viewport_width = aspect_ratio * viewport_height;
 
         let w = (*look_from - *look_at).normal();
         let u = (*view_up * w).normal();
         let v = u * w;
 
-        let horizontal = u * viewport_width;
-        let vertical = v * viewport_height;
+        let horizontal = u * viewport_width * focus_dist;
+        let vertical = v * viewport_height * focus_dist;
         let origin = look_from;
 
         Camera { 
-            origin: *look_from, 
+            origin: *origin, 
             lower_left_corner: *origin - horizontal/2.0 - vertical/2.0 - w*focus_dist,
             horizontal,
             vertical,
