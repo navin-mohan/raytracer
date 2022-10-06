@@ -40,11 +40,11 @@ impl Camera {
         }
     }
 
-    pub fn get_ray(&self, u: f64, v: f64) -> Ray {
+    pub fn get_ray(&self, s: f64, t: f64) -> Ray {
         let rd = Vec3::get_random_point_in_unit_disk() * self.lens_radius;
-        let offset = u*rd.x + v*rd.y;
+        let offset = self.u*rd.x + self.v*rd.y;
         let new_origin = self.origin + offset;
-        let direction = self.lower_left_corner + self.horizontal*u + self.vertical*v - new_origin;
+        let direction = self.lower_left_corner + self.horizontal*s + self.vertical*t - new_origin;
         Ray::new(&new_origin, &direction)
     }
 
