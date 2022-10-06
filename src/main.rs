@@ -97,12 +97,13 @@ fn main() -> std::io::Result<()> {
         ))
     ];
 
-    let look_from = Vec3::new(-3.0, 2.0, 3.0);
+    let look_from = Vec3::new(3.0, 2.0, 2.0);
     let look_at = Vec3::new(0.0, 0.0, -1.0);
     let view_up = Vec3::new(0.0, 1.0, 0.0);
-    let vfov = 90.0;
+    let vfov = 20.0;
+    let aperture = 2.0;
 
-    let camera = Camera::new(&look_from, &look_at, &view_up, vfov, ASPECT_RATIO);
+    let camera = Camera::new(&look_from, &look_at, &view_up, vfov, ASPECT_RATIO, aperture, (look_from - look_at).length());
 
     for y in 0..image.height() {
         for x in 0..image.width() {
