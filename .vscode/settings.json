@@ -5,8 +5,11 @@
         "etat",
         "fastrand",
         "Lambertian",
+        "Mohan",
+        "Navin",
         "powi",
         "raytracer",
+        "raytracerbin",
         "vfov"
     ]
 }

@@ -2,6 +2,15 @@
 name = "raytracer"
 version = "0.1.0"
 edition = "2021"
+authors = [ "Navin Mohan <navinmohan81@gmail.com>"]
+
+[lib]
+name = "raytracer"
+path = "src/lib.rs"
+
+[[bin]]
+name = "raytracerbin"
+path = "src/bin.rs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

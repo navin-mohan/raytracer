@@ -1,108 +1,19 @@
-mod camera;
-mod hittable;
-mod image;
-mod material;
-mod ray;
-mod vec3;
+pub mod camera;
+pub mod hittable;
+pub mod image;
+pub mod material;
+pub mod ray;
+pub mod vec3;
 
-use crate::{
-    camera::Camera,
-    material::Metal,
-    material::{Dielectric, Lambertian},
-};
-use hittable::{sphere::Sphere, HitRecord, Hittable};
+use hittable::{Hittable, sphere::Sphere, HitRecord};
+use camera::Camera;
 use image::{Image, Pixel};
-use material::Material;
 use ray::Ray;
-use std::{fs::File, io::Write, iter::repeat_with, rc::Rc};
 use vec3::Vec3;
+use material::{Material, Lambertian, Dielectric, Metal};
+use std::{rc::Rc, iter::repeat_with};
 
-fn trace_ray(r: &Ray, world: &Vec<Box<dyn Hittable>>, max_depth: usize) -> Pixel {
-    if max_depth <= 0 {
-        return Pixel::black();
-    }
-
-    let mut t_closest_so_far = f64::INFINITY;
-    let mut rec: Option<HitRecord> = None;
-
-    for obj in world {
-        let result = obj.hit(&r, 0.001, t_closest_so_far);
-
-        if let Some(temp_rec) = result {
-            t_closest_so_far = temp_rec.t_value();
-            rec = Some(temp_rec);
-        }
-    }
-
-    if let Some(final_rec) = rec {
-        if let Some((attenuation, new_ray)) = final_rec.material().scatter(r, final_rec) {
-            let pixel = trace_ray(&new_ray, world, max_depth - 1);
-
-            return Pixel::new(
-                (attenuation.x * pixel.r as f64) as u8,
-                (attenuation.y * pixel.g as f64) as u8,
-                (attenuation.z * pixel.b as f64) as u8,
-            );
-        }
-
-        return Pixel::black();
-    }
-
-    let w = 0.5 * (r.direction().y + 1.0);
-    let white: Vec3 = Vec3::new(1.0, 1.0, 1.0);
-    let blue: Vec3 = Vec3::new(0.5, 0.7, 1.0);
-    let color = white * (1.0 - w) + blue * w;
-    Pixel::new(
-        (color.x * 255.0) as u8,
-        (color.y * 255.0) as u8,
-        (color.z * 255.0) as u8,
-    )
-}
-
-fn main() -> std::io::Result<()> {
-    const ASPECT_RATIO: f64 = 16.0 / 9.0;
-
-    const IMG_HEIGHT: usize = 400;
-    const IMG_WIDTH: usize = (IMG_HEIGHT as f64 * ASPECT_RATIO) as usize;
-
-    const SAMPLES_PER_PIXEL: usize = 100;
-
-    const MAX_DEPTH: usize = 50;
-
-    let world: Vec<Box<dyn Hittable>> = create_random_scene();
-
-    let look_from = Vec3::new(13.0, 2.0, 3.0);
-    let look_at = Vec3::new(0.0, 0.0, 0.0);
-    let view_up = Vec3::new(0.0, 1.0, 0.0);
-    let vfov = 20.0;
-    let aperture = 0.1;
-    let focus_dist = 10.0;
-
-    let camera = Camera::new(
-        &look_from,
-        &look_at,
-        &view_up,
-        vfov,
-        ASPECT_RATIO,
-        aperture,
-        focus_dist,
-    );
-
-    let image = render(
-        IMG_HEIGHT,
-        IMG_WIDTH,
-        SAMPLES_PER_PIXEL,
-        MAX_DEPTH,
-        &camera,
-        &world,
-    );
-
-    let mut f = File::create("test.ppm")?;
-    f.write_all(image.to_ppm().as_bytes())?;
-    Ok(())
-}
-
-fn render(
+pub fn render(
     image_height: usize,
     image_width: usize,
     samples_per_pixel: usize,
@@ -139,6 +50,7 @@ fn render(
     )
 }
 
+
 fn get_random_material() -> Rc<dyn Material> {
     let materials: Vec<Rc<dyn Material>> = vec![
         Rc::new(Lambertian::new(&Vec3::new(
@@ -160,7 +72,7 @@ fn get_random_material() -> Rc<dyn Material> {
     materials[fastrand::usize(0..materials.len())].clone()
 }
 
-fn create_random_scene() -> Vec<Box<dyn Hittable>> {
+pub fn create_random_scene() -> Vec<Box<dyn Hittable>> {
     let large_spheres = vec![
         // ground
         Box::new(Sphere::new(
@@ -208,4 +120,47 @@ impl FromIterator<Box<Sphere>> for Vec<Box<dyn Hittable>> {
         }
         v
     }
+}
+
+
+fn trace_ray(r: &Ray, world: &Vec<Box<dyn Hittable>>, max_depth: usize) -> Pixel {
+    if max_depth <= 0 {
+        return Pixel::black();
+    }
+
+    let mut t_closest_so_far = f64::INFINITY;
+    let mut rec: Option<HitRecord> = None;
+
+    for obj in world {
+        let result = obj.hit(&r, 0.001, t_closest_so_far);
+
+        if let Some(temp_rec) = result {
+            t_closest_so_far = temp_rec.t_value();
+            rec = Some(temp_rec);
+        }
+    }
+
+    if let Some(final_rec) = rec {
+        if let Some((attenuation, new_ray)) = final_rec.material().scatter(r, final_rec) {
+            let pixel = trace_ray(&new_ray, world, max_depth - 1);
+
+            return Pixel::new(
+                (attenuation.x * pixel.r as f64) as u8,
+                (attenuation.y * pixel.g as f64) as u8,
+                (attenuation.z * pixel.b as f64) as u8,
+            );
+        }
+
+        return Pixel::black();
+    }
+
+    let w = 0.5 * (r.direction().y + 1.0);
+    let white: Vec3 = Vec3::new(1.0, 1.0, 1.0);
+    let blue: Vec3 = Vec3::new(0.5, 0.7, 1.0);
+    let color = white * (1.0 - w) + blue * w;
+    Pixel::new(
+        (color.x * 255.0) as u8,
+        (color.y * 255.0) as u8,
+        (color.z * 255.0) as u8,
+    )
 }
