@@ -60,57 +60,49 @@ fn trace_ray(r: &Ray, world: &Vec<Box<dyn Hittable>>, max_depth: usize) -> Pixel
 fn main() -> std::io::Result<()> {
     const ASPECT_RATIO: f64 = 16.0/9.0;
 
-    const VP_HEIGHT: f64 = 2.0;
-    const VP_WIDTH: f64 = VP_HEIGHT * ASPECT_RATIO;
-
     const IMG_HEIGHT: usize = 400;
     const IMG_WIDTH: usize = (IMG_HEIGHT as f64 * ASPECT_RATIO) as usize;
-
-    const FOCAL_LENGTH: f64 = 1.0;
 
     const SAMPLES_PER_PIXEL: usize = 100;
 
     const MAX_DEPTH: usize = 50;
 
-    let origin = Vec3::new(0.0, 0.0, 0.0);
-    let camera = Camera::new(&origin, VP_HEIGHT, VP_WIDTH, FOCAL_LENGTH);
-
     let mut image = Image::new(IMG_HEIGHT, IMG_WIDTH);
 
     let material_ground = Rc::new(Lambertian::new(&Vec3::new(0.8, 0.8, 0.0)));
+    let material_center = Rc::new(Lambertian::new(&Vec3::new(0.1, 0.2, 0.5)));
     let material_left = Rc::new(Dielectric::new(1.5));
     let material_right = Rc::new(Metal::new(&Vec3::new(0.8, 0.6, 0.2), 0.0));
-    let material_center = Rc::new(Lambertian::new(&Vec3::new(0.1, 0.2, 0.5)));
 
-    let sphere_center = Sphere::new(
-        &Vec3::new( 0.0, 0.0, -1.0),
-        0.5,
-        material_center
-    );
+    let world: Vec<Box<dyn Hittable>> = vec![
+        Box::new(Sphere::new(
+            &Vec3::new(0.0, -100.5, -1.0),
+            100.0,
+            material_ground
+        )),
+        Box::new(Sphere::new(
+            &Vec3::new( 0.0, 0.0, -1.0),
+            0.5,
+            material_center
+        )),
+        Box::new(Sphere::new(
+            &Vec3::new(-1.0, 0.0, -1.0),
+            0.5,
+            material_left
+        )),
+        Box::new(Sphere::new(
+            &Vec3::new(1.0, 0.0, -1.0),
+            0.5,
+            material_right
+        ))
+    ];
 
-    let sphere_left = Sphere::new(
-        &Vec3::new(-1.0, 0.0, -1.0),
-        0.5,
-        material_left
-    );
+    let look_from = Vec3::new(-3.0, 2.0, 3.0);
+    let look_at = Vec3::new(0.0, 0.0, -1.0);
+    let view_up = Vec3::new(0.0, 1.0, 0.0);
+    let vfov = 90.0;
 
-    let sphere_right = Sphere::new(
-        &Vec3::new(1.0, 0.0, -1.0),
-        0.5,
-        material_right
-    );
-
-    let sphere_ground = Sphere::new(
-        &Vec3::new(0.0, -100.5, -1.0),
-        100.0,
-        material_ground
-    );
-
-    let mut world: Vec<Box<dyn Hittable>> = Vec::new();
-    world.push(Box::new(sphere_ground));
-    world.push(Box::new(sphere_left));
-    world.push(Box::new(sphere_right));
-    world.push(Box::new(sphere_center));
+    let camera = Camera::new(&look_from, &look_at, &view_up, vfov, ASPECT_RATIO);
 
     for y in 0..image.height() {
         for x in 0..image.width() {

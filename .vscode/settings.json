@@ -1,7 +1,11 @@
 {
     "cSpell.words": [
+        "consts",
+        "etai",
+        "etat",
         "fastrand",
         "Lambertian",
+        "powi",
         "raytracer"
     ]
 }

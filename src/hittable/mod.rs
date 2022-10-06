@@ -1,4 +1,4 @@
-use crate::{ray::Ray, vec3::Vec3, material::{Material, self}};
+use crate::{ray::Ray, vec3::Vec3, material::Material};
 use std::rc::Rc;
 
 pub mod sphere;
