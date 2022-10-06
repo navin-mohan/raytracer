@@ -9,6 +9,8 @@ use std::{fs::File, io::Write};
 
 
 fn main() -> std::io::Result<()> {
+    quad_rand::srand(123456789);
+    
     const ASPECT_RATIO: f64 = 16.0 / 9.0;
 
     const IMG_HEIGHT: usize = 400;

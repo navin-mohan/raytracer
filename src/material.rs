@@ -1,4 +1,9 @@
-use crate::{hittable::HitRecord, ray::Ray, vec3::Vec3};
+use crate::{
+    hittable::HitRecord, 
+    ray::Ray, 
+    vec3::Vec3,
+    bad_rand::rand_f64
+};
 
 pub trait Material {
     fn scatter(&self, r: &Ray, hit_record: HitRecord) -> Option<(Vec3, Ray)>;
@@ -86,7 +91,7 @@ impl Material for Dielectric {
         };
 
         let new_direction = if refraction_ratio * sin_theta > 1.0
-            || reflectance(cos_theta, refraction_ratio) > fastrand::f64()
+            || reflectance(cos_theta, refraction_ratio) > rand_f64()
         {
             // no solution for snell's law. Hence, no refraction
             reflect(r.direction(), hit_record.normal())

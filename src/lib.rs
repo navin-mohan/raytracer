@@ -4,6 +4,7 @@ pub mod image;
 pub mod material;
 pub mod ray;
 pub mod vec3;
+pub mod bad_rand;
 
 use hittable::{Hittable, sphere::Sphere, HitRecord};
 use camera::Camera;
@@ -30,7 +31,7 @@ pub fn render(
         h_range
             .flat_map(|x| w_range.clone().map(move |y| (image_height - x - 1, y)))
             .map(|(x, y)| {
-                repeat_with(|| fastrand::f64())
+                repeat_with(|| bad_rand::rand_f64())
                     .take(samples_per_pixel)
                     .map(|random_val| {
                         (
@@ -54,22 +55,22 @@ pub fn render(
 fn get_random_material() -> Rc<dyn Material> {
     let materials: Vec<Rc<dyn Material>> = vec![
         Rc::new(Lambertian::new(&Vec3::new(
-            fastrand::f64(),
-            fastrand::f64(),
-            fastrand::f64(),
+            bad_rand::rand_f64(),
+            bad_rand::rand_f64(),
+            bad_rand::rand_f64(),
         ))),
         Rc::new(Metal::new(
             &Vec3::new(
-                0.5 + fastrand::f64() / 2.0,
-                0.5 + fastrand::f64() / 2.0,
-                0.5 + fastrand::f64() / 2.0,
+                0.5 + bad_rand::rand_f64() / 2.0,
+                0.5 + bad_rand::rand_f64() / 2.0,
+                0.5 + bad_rand::rand_f64() / 2.0,
             ),
-            fastrand::f64() / 2.0,
+            bad_rand::rand_f64() / 2.0,
         )),
         Rc::new(Dielectric::new(1.5)),
     ];
 
-    materials[fastrand::usize(0..materials.len())].clone()
+    materials[bad_rand::rand_usize(0..materials.len())].clone()
 }
 
 pub fn create_random_scene() -> Vec<Box<dyn Hittable>> {
@@ -102,9 +103,9 @@ pub fn create_random_scene() -> Vec<Box<dyn Hittable>> {
         .flat_map(|a| r.clone().map(move |b| (a, b)))
         .map(|(a, b)| {
             Vec3::new(
-                a as f64 + 0.9 * fastrand::f64(),
+                a as f64 + 0.9 * bad_rand::rand_f64(),
                 0.2,
-                b as f64 + 0.9 * fastrand::f64(),
+                b as f64 + 0.9 * bad_rand::rand_f64(),
             )
         })
         .map(|center| Box::new(Sphere::new(&center, 0.2, get_random_material())))
@@ -163,4 +164,41 @@ fn trace_ray(r: &Ray, world: &Vec<Box<dyn Hittable>>, max_depth: usize) -> Pixel
         (color.y * 255.0) as u8,
         (color.z * 255.0) as u8,
     )
+}
+
+extern crate wasm_bindgen;
+
+use wasm_bindgen::prelude::wasm_bindgen;
+
+#[wasm_bindgen]
+pub fn greet() -> String {
+    format!("Hello World!")
+}
+
+#[wasm_bindgen]
+pub fn render_image(image_height: usize, image_width: usize, samples_per_pixel: usize, max_depth: usize) -> Vec<u8> {
+    quad_rand::srand(123456789);
+    const ASPECT_RATIO: f64 = 16.0 / 9.0;
+
+    let world: Vec<Box<dyn Hittable>> = create_random_scene();
+
+    let look_from = Vec3::new(13.0, 2.0, 3.0);
+    let look_at = Vec3::new(0.0, 0.0, 0.0);
+    let view_up = Vec3::new(0.0, 1.0, 0.0);
+    let vfov = 20.0;
+    let aperture = 0.1;
+    let focus_dist = 10.0;
+
+    let camera = Camera::new(
+        &look_from,
+        &look_at,
+        &view_up,
+        vfov,
+        ASPECT_RATIO,
+        aperture,
+        focus_dist,
+    );
+
+    render(image_height, image_width, samples_per_pixel, max_depth, &camera, &world)
+        .to_js_image_data()
 }

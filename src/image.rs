@@ -63,4 +63,8 @@ impl Image {
 
         format!("P3\n{} {}\n255\n {body}", self.width, self.height)
     }
+
+    pub fn to_js_image_data(&self) -> Vec<u8> {
+        self.pixels.iter().flat_map(|pixel| vec![pixel.r, pixel.g, pixel.b, 255]).collect()
+    }
 }
