@@ -5,36 +5,42 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Raytracer</title>
     <!-- CSS only -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi" crossorigin="anonymous">
   </head>
   <body>
     <noscript>This page contains webassembly and javascript content, please enable javascript in your browser.</noscript>
-    <div class="container-sm">
-      <h1 class="display-1">Raytracer</h1>
-      <div class="xs-3 pt-5">
-        <div class="xs-3">
-          <label for="image_width" class="form-label">Image Width</label>
-          <input value="530" class="form-control" type="number" name="width" id="image_width">
+    <div id="app">
+      <div class="container-sm">
+        <h1 class="display-1">Raytracer</h1>
+        <div class="xs-12 pt-2">
+          <div class="xs-3">
+            <label for="image_width" class="form-label">Image Width</label>
+            <input v-model="image_width" class="form-control" type="number" name="width" id="image_width">
+          </div>
+          <div class="xs-3">
+            <label for="image_height" class="form-label">Image Height</label>
+            <input v-model="image_height" class="form-control" type="number" name="height" id="image_height">
+          </div>
+          <div class="xs-3">
+            <label for="samples_per_pixel" class="form-label">Samples per Pixel</label>
+            <input v-model="samples_per_pixel" class="form-control" type="number" name="samples per pixel" id="samples_per_pixel">
+          </div>
+          <div class="xs-3">
+            <label for="max_depth" class="form-label">Max Depth</label>
+            <input v-model="max_depth" class="form-control" type="number" name="max depth" id="max_depth">
+          </div>
+            <button class="btn btn-primary m-3 ms-1" type="button" id="generate_button" :disabled="rendering_in_progress" @click="handle_generate">
+              <span v-if="rendering_in_progress" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+              <span v-if="rendering_in_progress" class="ps-1">Rendering...</span>
+              <span v-if="!rendering_in_progress">Generate</span>
+            </button>
         </div>
-        <div class="xs-3">
-          <label for="image_height" class="form-label">Image Height</label>
-          <input value="300" class="form-control" type="number" name="height" id="image_height">
+        <div v-if="!rendering_in_progress && time_taken > 0" class="xs-12 p-3">
+          <h5 id="time_taken"> Time taken: {{ time_taken.toFixed(2) }} ms</h5>
         </div>
-        <div class="xs-3">
-          <label for="samples_per_pixel" class="form-label">Samples per Pixel</label>
-          <input value="100" class="form-control" type="number" name="samples per pixel" id="samples_per_pixel">
+        <div class="xs-12 p-1">
+          <canvas class="mx-auto" id="canvas" :height="image_height" :width="image_width"></canvas>
         </div>
-        <div class="xs-3">
-          <label for="max_depth" class="form-label">Max Depth</label>
-          <input value="10" class="form-control" type="number" name="max depth" id="max_depth">
-        </div>
-          <input class="btn btn-primary mt-3" type="button" name="generate" id="generate_button" value="Generate">
-      </div>
-      <div class="xs-12 p-3">
-        <p id="time_taken"></p>
-      </div>
-      <div class="xs-12 p-3">
-        <canvas class="mx-auto" id="canvas"></canvas>
       </div>
     </div>
     <script src="./bootstrap.js"></script>

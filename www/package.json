@@ -23,7 +23,8 @@
   "author": "Navin Mohan <navinmohan81@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "raytracer": "file:../pkg"
+    "raytracer": "file:../pkg",
+    "vue": "^3.2.40"
   },
   "devDependencies": {
     "copy-webpack-plugin": "^5.0.0",
