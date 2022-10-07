@@ -2,6 +2,8 @@
 
 A basic raytracer implementation in Rust based on the [_Ray Tracing in One Weekend_](https://raytracing.github.io/books/RayTracingInOneWeekend.html) book.
 
+[Live Demo](http://navinmohan.com/raytracer/)
+
 ## Result
 
 ![output](img/test.png)
@@ -26,7 +28,7 @@ $ cd www
 $ npm run start
 ```
 
-This will be hosted on github pages soon.
+It is hosted on GitHub Pages available at http://navinmohan.com/raytracer/
 
 ## Adjusting the objects or camera
 
