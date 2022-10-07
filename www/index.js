@@ -1,7 +1,3 @@
-import * as raytracer from "raytracer";
-
-console.log(raytracer.greet());
-
 function getValue(id) {
     const el = document.getElementById(id);
     return el.value
@@ -15,9 +11,22 @@ function startMessage() {
     document.getElementById("time_taken").innerText = 'Rendering in progress...';
 }
 
+function enableGenerateButton(enabled) {
+    document.getElementById("generate_button").disabled = !enabled;
+}
 
+const worker = new Worker(new URL("./rt.js", import.meta.url));
+
+worker.onmessage = ({ data: { image, time_taken } }) => {
+    setTimeTakenValue(time_taken);
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    ctx.putImageData(image, 0, 0);
+    enableGenerateButton(true);
+};
 
 function handler() {
+    enableGenerateButton(false);
     startMessage();
     console.log("Hanlder called");
     const image_height = getValue("image_height");
@@ -29,16 +38,10 @@ function handler() {
     canvas.height = image_height;
     const ctx = canvas.getContext("2d");
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-    setTimeout(function() {
-        const startTime = performance.now()
-        const image = raytracer.render_image(image_height, image_width, samples_per_pixel, max_depth);
-        const endTime = performance.now()
-
-        setTimeTakenValue(endTime - startTime);
-
-        const image_data = new ImageData(new Uint8ClampedArray(image), image_width, image_height);
-        ctx.putImageData(image_data, 0, 0);
-    }, 0);
+    worker.postMessage({
+        image_height, image_width, samples_per_pixel, max_depth
+    });
 }
 
+enableGenerateButton(true);
 document.getElementById("generate_button").addEventListener('click', handler);
